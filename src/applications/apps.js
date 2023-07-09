@@ -25,6 +25,12 @@ import { assign } from "../utils/assign";
 
 const apps = [];
 
+/**
+ * Function to get changes for all the registered apps
+ * It loops through all the apps and based on their status, 
+ * adds them to their respective array
+ * @returns {Object} An object containing arrays of apps to unload, unmount, load and mount
+ */
 export function getAppChanges() {
   const appsToUnload = [],
     appsToUnmount = [],
@@ -70,24 +76,49 @@ export function getAppChanges() {
   return { appsToUnload, appsToUnmount, appsToLoad, appsToMount };
 }
 
+/**
+ * Function to get an array of names of all the mounted apps
+ * @returns {Array} array of names of all the mounted apps
+ */
 export function getMountedApps() {
   return apps.filter(isActive).map(toName);
 }
 
+/**
+ * Function to get the names of all registered apps
+ * @returns {Array} array of all registered app names
+ */
 export function getAppNames() {
   return apps.map(toName);
 }
 
-// used in devtools, not (currently) exposed as a single-spa API
+/**
+ * Function that return a clone of the apps array. 
+ * This function is mainly used in devtools and not exposed as a single-spa API.
+ * @returns {Array} clone of apps
+ */
 export function getRawAppData() {
   return [...apps];
 }
 
+/**
+ * Function that returns the status of a specific application
+ * @param {string} appName Name of the application
+ * @returns {string|null} Status of the application or null if the application is not found
+ */
 export function getAppStatus(appName) {
   const app = find(apps, (app) => toName(app) === appName);
   return app ? app.status : null;
 }
 
+/**
+ * Function to register an application with single-spa
+ * @param {string|Object} appNameOrConfig Either the name of the app or a registration config object
+ * @param {Function} appOrLoadApp Either the application function or a loading function which will async load the app 
+ * @param {Function|Array} activeWhen Function or array of functions which should return true when the app should be active
+ * @param {Object} customProps Props that will get passed to the app during its lifecycle
+ * @throws {Error} If an app with the same name already exists
+ */
 export function registerApplication(
   appNameOrConfig,
   appOrLoadApp,
@@ -134,10 +165,22 @@ export function registerApplication(
   }
 }
 
+
+/**
+ * Function to check which apps should be active for a specific location
+ * @param {Location} location object which default's to window's location object
+ * @returns {Array} Names of apps which should be active for the specific location
+ */
 export function checkActivityFunctions(location = window.location) {
   return apps.filter((app) => app.activeWhen(location)).map(toName);
 }
 
+/**
+ * Function to unregister an application
+ * @param {string} appName Name of the application to unregister
+ * @returns {Promise} Promise which resolves when the app gets unregistered
+ * @throws {Error} If the app to unregister is not found
+ */
 export function unregisterApplication(appName) {
   if (apps.filter((app) => toName(app) === appName).length === 0) {
     throw Error(
@@ -156,6 +199,13 @@ export function unregisterApplication(appName) {
   });
 }
 
+/**
+ * Function to unload an application
+ * @param {string} appName Name of the application to unload
+ * @param {Object} [opts={ waitForUnmount: false }] Optional object to control the unload behavior
+ * @returns {Promise} Promise that resolves when the app gets unloaded
+ * @throws {Error} If appName is not a string or if the app is not found
+ */
 export function unloadApplication(appName, opts = { waitForUnmount: false }) {
   if (typeof appName !== "string") {
     throw Error(
@@ -213,6 +263,12 @@ export function unloadApplication(appName, opts = { waitForUnmount: false }) {
   }
 }
 
+/**
+ * Function to immediately unload an application
+ * @param {Object} app The application to unload
+ * @param {Function} resolve The resolve function from the associated promise
+ * @param {Function} reject The reject function from the associated promise
+ */
 function immediatelyUnloadApp(app, resolve, reject) {
   toUnmountPromise(app)
     .then(toUnloadPromise)
@@ -226,6 +282,15 @@ function immediatelyUnloadApp(app, resolve, reject) {
     .catch(reject);
 }
 
+/**
+ * Check if the arguments provided to register the application are valid
+ * 
+ * @param {string} name - the name of the application
+ * @param {Object|Function} appOrLoadApp - the application itself, or a function to load the application
+ * @param {Function} activeWhen - a function that determines when to activate the application
+ * @param {Object} customProps - additional properties to pass to the application
+ * @throws {Error} If the provided arguments are not in the expected format or type
+ */
 function validateRegisterWithArguments(
   name,
   appOrLoadApp,
@@ -269,6 +334,12 @@ function validateRegisterWithArguments(
     );
 }
 
+/**
+ * Check if the configuration object provided to register the application is valid
+ * 
+ * @param {Object} config - the configuration object for the application
+ * @throws {Error} If the provided configuration object is not as expected
+ */
 export function validateRegisterWithConfig(config) {
   if (Array.isArray(config) || config === null)
     throw Error(
@@ -336,6 +407,12 @@ export function validateRegisterWithConfig(config) {
     );
 }
 
+/**
+ * Check if the customProps object is valid
+ * 
+ * @param {Object} customProps - the properties to check
+ * @returns {boolean} whether the provided customProps are valid
+ */
 function validCustomProps(customProps) {
   return (
     !customProps ||
@@ -346,6 +423,15 @@ function validCustomProps(customProps) {
   );
 }
 
+/**
+ * If individual arguments are provided, coalesce them into a single configuration object
+ * 
+ * @param {Object|string} appNameOrConfig - the name of the app or a configuration object
+ * @param {Object|Function} appOrLoadApp - the application itself, or a function to load the application
+ * @param {Function} activeWhen - a function that determines when to activate the application
+ * @param {Object} customProps - additional properties to pass to the application
+ * @returns {Object} registration - coalesced configuration for the application
+ */
 function sanitizeArguments(
   appNameOrConfig,
   appOrLoadApp,
@@ -387,6 +473,12 @@ function sanitizeArguments(
   return registration;
 }
 
+/**
+ * Ensure the loadApp function is valid
+ * 
+ * @param {Function} loadApp - the function to load the application
+ * @returns {Function} - a Promise-wrapped function to load the application
+ */
 function sanitizeLoadApp(loadApp) {
   if (typeof loadApp !== "function") {
     return () => Promise.resolve(loadApp);
@@ -395,10 +487,22 @@ function sanitizeLoadApp(loadApp) {
   return loadApp;
 }
 
+/**
+ * Ensure the customProps object is valid or return an empty object if not provided
+ * 
+ * @param {Object} customProps - the properties to check
+ * @returns {Object} - the valid customProps or an empty object
+ */
 function sanitizeCustomProps(customProps) {
   return customProps ? customProps : {};
 }
 
+/**
+ * Ensure the activeWhen function is valid
+ * 
+ * @param {Function} activeWhen - a function that determines when to activate the application
+ * @returns {Function} - a function that determines whether the application should be active
+ */
 function sanitizeActiveWhen(activeWhen) {
   let activeWhenArray = Array.isArray(activeWhen) ? activeWhen : [activeWhen];
   activeWhenArray = activeWhenArray.map((activeWhenOrPath) =>
@@ -411,6 +515,13 @@ function sanitizeActiveWhen(activeWhen) {
     activeWhenArray.some((activeWhen) => activeWhen(location));
 }
 
+/**
+ * Returns a function that tests whether or not a path is active.
+ * 
+ * @param {string} path - the path to test
+ * @param {boolean} exactMatch - whether the path must exactly match or if it can be a prefix match
+ * @returns {Function} - a function for checking if a path is active
+ */
 export function pathToActiveWhen(path, exactMatch) {
   const regex = toDynamicPathValidatorRegex(path, exactMatch);
 
@@ -428,6 +539,13 @@ export function pathToActiveWhen(path, exactMatch) {
   };
 }
 
+/**
+ * Returns a regex for dynamic path validation.
+ * 
+ * @param {string} path - the path to test
+ * @param {boolean} exactMatch - whether the path must exactly match or if it can be a prefix match
+ * @returns {RegExp} - the regex for matching the dynamic path
+ */
 function toDynamicPathValidatorRegex(path, exactMatch) {
   let lastIndex = 0,
     inDynamic = false,

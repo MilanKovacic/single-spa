@@ -5,6 +5,7 @@ import { formatErrorMessage } from "./app-errors";
 
 const defaultWarningMillis = 1000;
 
+// Object containing default timeout configurations for various lifecycle methods
 const globalTimeoutConfig = {
   bootstrap: {
     millis: 4000,
@@ -33,6 +34,13 @@ const globalTimeoutConfig = {
   },
 };
 
+/**
+ * Sets the maximum time allowed for the bootstrap lifecycle method.
+ * @param {number} time - Maximum timeout.
+ * @param {boolean} dieOnTimeout - Indicator whether to throw error on reaching timeout.
+ * @param {number} warningMillis - Milleseconds to warn before reaching timeout.
+ * @throws {Error} Will throw an error if time is not a positive number.
+ */
 export function setBootstrapMaxTime(time, dieOnTimeout, warningMillis) {
   if (typeof time !== "number" || time <= 0) {
     throw Error(
@@ -51,6 +59,13 @@ export function setBootstrapMaxTime(time, dieOnTimeout, warningMillis) {
   };
 }
 
+/**
+ * Sets the maximum time allowed for the mount lifecycle method.
+ * @param {number} time - Maximum timeout.
+ * @param {boolean} dieOnTimeout - Indicator whether to throw error on reaching timeout.
+ * @param {number} warningMillis - Milleseconds to warn before reaching timeout.
+ * @throws {Error} Will throw an error if time is not a positive number.
+ */
 export function setMountMaxTime(time, dieOnTimeout, warningMillis) {
   if (typeof time !== "number" || time <= 0) {
     throw Error(
@@ -69,6 +84,13 @@ export function setMountMaxTime(time, dieOnTimeout, warningMillis) {
   };
 }
 
+/**
+ * Sets the maximum time allowed for the unmount lifecycle method.
+ * @param {number} time - Maximum timeout.
+ * @param {boolean} dieOnTimeout - Indicator whether to throw error on reaching timeout.
+ * @param {number} warningMillis - Milleseconds to warn before reaching timeout.
+ * @throws {Error} Will throw an error if time is not a positive number.
+ */
 export function setUnmountMaxTime(time, dieOnTimeout, warningMillis) {
   if (typeof time !== "number" || time <= 0) {
     throw Error(
@@ -87,6 +109,13 @@ export function setUnmountMaxTime(time, dieOnTimeout, warningMillis) {
   };
 }
 
+/**
+ * Sets the maximum time allowed for the unload lifecycle method.
+ * @param {number} time - Maximum timeout.
+ * @param {boolean} dieOnTimeout - Indicator whether to throw error on reaching timeout.
+ * @param {number} warningMillis - Milleseconds to warn before reaching timeout.
+ * @throws {Error} Will throw an error if time is not a positive number.
+ */
 export function setUnloadMaxTime(time, dieOnTimeout, warningMillis) {
   if (typeof time !== "number" || time <= 0) {
     throw Error(
@@ -105,6 +134,12 @@ export function setUnloadMaxTime(time, dieOnTimeout, warningMillis) {
   };
 }
 
+/**
+ * Returns a promise which will resolve when the provided lifecycle of the app/parcel completes within the reasonable time (defined in globalTimeoutConfig), or rejects/warns if lifecycle takes more time than expected.
+ * @param {any} appOrParcel - Object representing the app or parcel.
+ * @param {string} lifecycle - Name of the lifecycle.
+ * @returns {Promise} Promise representing the completion of lifecycle.
+ */
 export function reasonableTime(appOrParcel, lifecycle) {
   const timeoutConfig = appOrParcel.timeouts[lifecycle];
   const warningPeriod = timeoutConfig.warningMillis;
@@ -162,6 +197,11 @@ export function reasonableTime(appOrParcel, lifecycle) {
   });
 }
 
+/**
+ * Construct an object containing timeout configurations for each lifecycle, by merging the global default timeout configurations and the provided timeout configurations.
+ * @param {any} timeouts - An optional object containing timeout configurations differing from the global defaults.
+ * @returns {object} Object containing timeout configurations for each lifecycle.
+ */
 export function ensureValidAppTimeouts(timeouts) {
   const result = {};
 

@@ -1,7 +1,16 @@
 import { objectType, toName } from "./app.helpers";
 
+/**
+ * An array to store application error handlers.
+ */
 let errorHandlers = [];
 
+/**
+ * Handles app errors by transforming the error and executing any registered error handlers.
+ * @param {Error} err - Original error.
+ * @param {any} app - The application where the error occurred.
+ * @param {string} newStatus - The new status of the application.
+ */
 export function handleAppError(err, app, newStatus) {
   const transformedErr = transformErr(err, app, newStatus);
 
@@ -14,6 +23,11 @@ export function handleAppError(err, app, newStatus) {
   }
 }
 
+/**
+ * Adds an error handler to the application error handlers array.
+ * @param {function} handler - The function to handle application errors.
+ * @throws {Error} Will throw an error if handler is not a function.
+ */
 export function addErrorHandler(handler) {
   if (typeof handler !== "function") {
     throw Error(
@@ -27,6 +41,12 @@ export function addErrorHandler(handler) {
   errorHandlers.push(handler);
 }
 
+/**
+ * Removes an error handler from the application error handlers array.
+ * @param {function} handler - The function to remove from the application error handlers.
+ * @returns {boolean} Indicates whether an error handler was actually removed.
+ * @throws {Error} Will throw an error if handler is not a function.
+ */
 export function removeErrorHandler(handler) {
   if (typeof handler !== "function") {
     throw Error(
@@ -47,6 +67,13 @@ export function removeErrorHandler(handler) {
   return removedSomething;
 }
 
+/**
+ * Formats error messages to be displayed.
+ * @param {number|string} code - The error code.
+ * @param {string} msg - The error message.
+ * @param {Array} args - Additional arguments to be included in the message.
+ * @returns {string} The formatted message.
+ */
 export function formatErrorMessage(code, msg, ...args) {
   return `single-spa minified message #${code}: ${
     msg ? msg + " " : ""
@@ -55,6 +82,13 @@ export function formatErrorMessage(code, msg, ...args) {
   }`;
 }
 
+/**
+ * Transforms the error message of the error object to include more details about the error.
+ * @param {Error|any} ogErr - The original Error to transform.
+ * @param {any} appOrParcel - The application or parcel where the error occurred.
+ * @param {string} newStatus - The new status of the application or parcel.
+ * @returns {Error|any} The transformed Error.
+ */
 export function transformErr(ogErr, appOrParcel, newStatus) {
   const errPrefix = `${objectType(appOrParcel)} '${toName(
     appOrParcel
